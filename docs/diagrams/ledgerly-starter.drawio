@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<mxfile host="drawio" agent="ledgerly-workshop" version="24.7.17">
+  <diagram id="ledgerly-starter" name="Ledgerly starter">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Ledgerly – &amp;lt;as-is | to-be&amp;gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#1B1B1F;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="700" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Generated live with Copilot Agent mode + draw.io MCP server (search-shapes → create-groups → add-cells → export-diagram)" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#6B6F76;" vertex="1" parent="1">
+          <mxGeometry x="40" y="52" width="900" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="canvas" value="draw here" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#D0D0D0;fontColor=#B0B0B0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="1320" height="640" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;Legend&lt;/b&gt;&lt;br&gt;■ blue box = container / Container App&lt;br&gt;■ yellow cylinder = volume / storage&lt;br&gt;■ red note = risk&lt;br&gt;→ solid = runtime flow · dashed = config / identity / logs" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B3B3B3;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="770" width="420" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="l1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="480" y="780" width="40" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="l1t" value="container (on-prem)" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#6B6F76;" vertex="1" parent="1">
+          <mxGeometry x="528" y="780" width="160" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="l2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0078D4;strokeColor=#005A9E;fontColor=#FFFFFF;fontSize=12;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="480" y="812" width="40" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="l2t" value="Azure service" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#6B6F76;" vertex="1" parent="1">
+          <mxGeometry x="528" y="812" width="160" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="l3" value="" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="480" y="844" width="40" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="l3t" value="risk / smell" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#6B6F76;" vertex="1" parent="1">
+          <mxGeometry x="528" y="844" width="160" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

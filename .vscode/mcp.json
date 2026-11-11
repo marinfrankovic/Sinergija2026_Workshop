@@ -1,0 +1,18 @@
+{
+  "servers": {
+    "drawio": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp"
+    },
+    "azure": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start"]
+    },
+    "thesvg": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@thesvg/mcp-server"]
+    }
+  }
+}

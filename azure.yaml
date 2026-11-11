@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+# Ledgerly – Azure Developer CLI project.
+#   azd env new workshop ; azd env set AZURE_LOCATION swedencentral ; azd env set MYSQL_ADMIN_PASSWORD '<fake>'
+#   azd provision --preview   (what-if)   ->   azd up
+#
+# web + api   : azd services (Container Apps created by Bicep, matched by tag azd-service-name)
+# batch       : NOT an azd service – it is a Container Apps *job*. The postdeploy hook builds the
+#               image in ACR (az acr build) and updates the job (az containerapp job update).
+name: ledgerly
+metadata:
+  template: ledgerly-workshop@1.0.0
+
+infra:
+  provider: bicep
+  path: infra
+  module: main
+
+services:
+  web:
+    project: ./web
+    language: docker
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+      remoteBuild: true
+  api:
+    project: ./api
+    language: docker
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+      remoteBuild: true
+
+hooks:
+  postdeploy:
+    shell: pwsh
+    run: ./scripts/hooks/postdeploy-batch.ps1
+    interactive: false
+    continueOnError: false

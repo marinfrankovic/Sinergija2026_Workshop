@@ -1,0 +1,93 @@
+// =============================================================================
+// Ledgerly – KQL for the break & fix block.
+// Workspace: log-ledgerly-workshop (Log Analytics). Container Apps env writes to the *_CL tables
+// (destination 'log-analytics'); environments using 'azure-monitor' + diagnostic settings use the
+// non-_CL tables. Both variants are listed – run the one that returns data.
+// =============================================================================
+
+// ---- 1. Container restarts / OOMKilled (fault 1) – custom log tables --------
+ContainerAppSystemLogs_CL
+| where TimeGenerated > ago(30m)
+| where ContainerAppName_s == "ca-ledgerly-api-workshop"
+| where Log_s has_any ("OOMKilled", "exit code 137", "Restart", "BackOff", "Probe", "terminated")
+     or Reason_s in ("ContainerTerminated", "ContainerCrashing", "BackOff", "ProbeFailed")
+| project TimeGenerated, RevisionName_s, ReplicaName_s, Reason_s, Log_s
+| order by TimeGenerated desc
+
+// ---- 1b. same, non-_CL variant (azure-monitor destination) ------------------
+ContainerAppSystemLogs
+| where TimeGenerated > ago(30m)
+| where ContainerAppName == "ca-ledgerly-api-workshop"
+| where Log has_any ("OOMKilled", "exit code 137", "Restart", "BackOff", "Probe", "terminated")
+     or Reason in ("ContainerTerminated", "ContainerCrashing", "BackOff", "ProbeFailed")
+| project TimeGenerated, RevisionName, ReplicaName, Reason, Log
+| order by TimeGenerated desc
+
+// ---- 1c. restart count per revision (5-min bins) ----------------------------
+ContainerAppSystemLogs_CL
+| where TimeGenerated > ago(1h) and ContainerAppName_s == "ca-ledgerly-api-workshop"
+| where Reason_s has "Terminated" or Log_s has "OOMKilled"
+| summarize restarts = count() by bin(TimeGenerated, 5m), RevisionName_s
+| render timechart
+
+// ---- 2. Console errors (fault 2: DB connectivity) ----------------------------
+ContainerAppConsoleLogs_CL
+| where TimeGenerated > ago(30m)
+| where ContainerAppName_s == "ca-ledgerly-api-workshop"
+| where Log_s has_any ("ERROR", "Exception", "Communications link failure", "Connection is not available", "timed out")
+| project TimeGenerated, RevisionName_s, Log_s
+| order by TimeGenerated desc
+
+// ---- 2b. same, non-_CL variant ----------------------------------------------
+ContainerAppConsoleLogs
+| where TimeGenerated > ago(30m)
+| where ContainerAppName == "ca-ledgerly-api-workshop"
+| where Log has_any ("ERROR", "Exception", "Communications link failure", "Connection is not available", "timed out")
+| project TimeGenerated, RevisionName, Log
+| order by TimeGenerated desc
+
+// ---- 3. App Insights: failed dependencies (MySQL / Redis) -------------------
+// Workspace-based schema (run in log-ledgerly-workshop):
+AppDependencies
+| where TimeGenerated > ago(30m)
+| where Success == false
+| summarize failures = count(), sample = any(Data) by DependencyType, Target, ResultCode
+| order by failures desc
+
+// classic schema (run in appi-ledgerly-workshop > Logs):
+// dependencies | where timestamp > ago(30m) and success == false
+// | summarize failures = count() by type, target, resultCode
+
+// ---- 4. App Insights: slow requests > 2000 ms (fault 3) ---------------------
+AppRequests
+| where TimeGenerated > ago(30m)
+| where DurationMs > 2000
+| summarize count(), p50 = percentile(DurationMs, 50), p95 = percentile(DurationMs, 95), max = max(DurationMs) by Name
+| order by p95 desc
+
+// classic schema:
+// requests | where timestamp > ago(30m) and duration > 2000
+// | summarize count(), p95 = percentile(duration, 95) by name
+
+// ---- 5. MySQL slow query log (fault 3) --------------------------------------
+AzureDiagnostics
+| where TimeGenerated > ago(30m)
+| where ResourceProvider == "MICROSOFT.DBFORMYSQL" and Category == "MySqlSlowLogs"
+| project TimeGenerated, Resource, query_time_d, rows_examined_d, rows_sent_d, sql_text_s
+| order by query_time_d desc
+| take 50
+
+// ---- 5b. slow-log summary: which statements scan the most rows --------------
+AzureDiagnostics
+| where TimeGenerated > ago(1h) and Category == "MySqlSlowLogs"
+| summarize calls = count(), avg_s = avg(query_time_d), rows_examined = sum(rows_examined_d)
+    by statement = substring(sql_text_s, 0, 120)
+| order by rows_examined desc
+
+// =============================================================================
+// Azure Resource Graph (run in Resource Graph Explorer or: az graph query -q "...")
+// =============================================================================
+resources
+| where resourceGroup =~ 'rg-ledgerly-workshop'
+| project name, type, location, sku, tags
+| order by type asc

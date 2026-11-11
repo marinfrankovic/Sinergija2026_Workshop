@@ -1,0 +1,7 @@
+# Shell scripts run inside Linux containers – they MUST keep LF line endings,
+# even when the repo is cloned on Windows with core.autocrlf=true.
+*.sh   text eol=lf
+*.sql  text eol=lf
+*.conf text eol=lf
+crontab text eol=lf
+*.ps1  text eol=crlf

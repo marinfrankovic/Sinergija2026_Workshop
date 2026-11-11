@@ -1,0 +1,49 @@
+# Ledgerly API configuration. Every value comes from an environment variable
+# so the same image runs in Docker Compose and in Azure Container Apps.
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ledgerly-api
+  datasource:
+    # DB_SSL_MODE: DISABLED locally (legacy, MySQL 5.7 in compose), REQUIRED in Azure.
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:ledgerly}?sslMode=${DB_SSL_MODE:DISABLED}&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USER:ledgerly}
+    password: ${DB_PASSWORD:}
+    hikari:
+      connection-timeout: 5000      # fail fast so network faults show up as errors, not hangs
+      maximum-pool-size: 10
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}    # optional; empty = no AUTH (legacy local Redis)
+    ssl: ${REDIS_SSL:false}         # Azure Cache for Redis: true + port 6380
+    timeout: 2s
+
+ledgerly:
+  version: 1.0.0
+  cache-ttl-seconds: 300
+
+logging:
+  level:
+    com.ledgerly: INFO
+
+---
+# "azure" profile – passwordless MySQL via Microsoft Entra ID + user-assigned managed identity.
+# Activated in block 4 with SPRING_PROFILES_ACTIVE=azure, AZURE_CLIENT_ID=<UAMI client id>,
+# DB_USER=<MySQL Entra user name, e.g. id-ledgerly-workshop>. DB_PASSWORD is no longer needed.
+spring:
+  config:
+    activate:
+      on-profile: azure
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME:ledgerly}?sslMode=REQUIRED&serverTimezone=UTC
+    username: ${DB_USER}
+    azure:
+      passwordless-enabled: true
+  cloud:
+    azure:
+      credential:
+        managed-identity-enabled: true
+        client-id: ${AZURE_CLIENT_ID}

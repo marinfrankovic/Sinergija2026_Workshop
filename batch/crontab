@@ -1,0 +1,2 @@
+# every 5 minutes; legacy: all output thrown away -> failures are invisible
+*/5 * * * * /app/report.sh > /dev/null 2>&1

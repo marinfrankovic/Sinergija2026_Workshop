@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledgerly – Portfolio Ledger &amp; Reporting</title>
+<style>
+  :root { --blue:#0078D4; --ink:#1b1b1f; --muted:#6b6f76; --bg:#f5f7fa; --card:#fff; --ok:#107c10; --warn:#c19c00; --bad:#d13438; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Segoe UI",system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--ink); }
+  header { background:var(--blue); color:#fff; padding:14px 24px; display:flex; align-items:center; gap:16px; }
+  header h1 { font-size:20px; margin:0; font-weight:600; }
+  header .sub { opacity:.85; font-size:13px; }
+  .badge { margin-left:auto; padding:4px 12px; border-radius:12px; font-size:13px; font-weight:600; background:#ffffff33; }
+  .badge.UP { background:var(--ok); } .badge.DEGRADED { background:var(--warn); } .badge.DOWN { background:var(--bad); }
+  main { display:grid; grid-template-columns: 340px 1fr; gap:20px; padding:20px 24px; }
+  .card { background:var(--card); border-radius:8px; box-shadow:0 1px 3px #0000001a; padding:16px; }
+  h2 { font-size:15px; margin:0 0 12px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  ul.list { list-style:none; margin:0; padding:0; }
+  ul.list li { padding:10px 12px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; }
+  ul.list li:hover { background:#eef4fb; } ul.list li.active { background:#deecf9; font-weight:600; }
+  ul.list li small { color:var(--muted); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px; border-bottom:1px solid #eceef1; }
+  th { color:var(--muted); font-weight:600; } td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .toolbar { display:flex; gap:8px; align-items:center; margin-top:16px; flex-wrap:wrap; }
+  select, button { font:inherit; padding:6px 10px; border-radius:6px; border:1px solid #c8ccd1; background:#fff; }
+  button.primary { background:var(--blue); color:#fff; border-color:var(--blue); cursor:pointer; }
+  button.primary:disabled { opacity:.6; cursor:wait; }
+  #reportOut { margin-top:12px; font-size:14px; color:var(--muted); }
+  .err { color:var(--bad); }
+  footer { padding:0 24px 20px; color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Ledgerly</h1>
+    <div class="sub">Portfolio ledger &amp; reporting – internal</div>
+  </div>
+  <span id="health" class="badge" title="GET /api/health">checking…</span>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Portfolios</h2>
+    <ul id="portfolios" class="list"><li>Loading…</li></ul>
+  </section>
+
+  <section class="card">
+    <h2 id="posTitle">Positions</h2>
+    <table>
+      <thead><tr><th>Symbol</th><th>Instrument</th><th class="num">Quantity</th><th class="num">Avg cost</th><th class="num">Market value</th></tr></thead>
+      <tbody id="positions"><tr><td colspan="5">Select a portfolio.</td></tr></tbody>
+    </table>
+
+    <div class="toolbar">
+      <label>Year <select id="year"><option>2024</option><option selected>2025</option></select></label>
+      <label>Month <select id="month"></select></label>
+      <button id="runReport" class="primary">Run monthly report</button>
+    </div>
+    <div id="reportOut"></div>
+  </section>
+</main>
+<footer id="footer">Ledgerly UI · API via /api/</footer>
+
+<script>
+const fmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+const $ = (id) => document.getElementById(id);
+
+for (let m = 1; m <= 12; m++) {
+  const o = document.createElement('option'); o.value = m; o.textContent = String(m).padStart(2, '0');
+  if (m === 6) o.selected = true; $('month').appendChild(o);
+}
+
+async function api(path, opts) {
+  const r = await fetch('/api' + path, opts);
+  if (!r.ok) throw new Error(r.status + ' ' + r.statusText);
+  return r.json();
+}
+
+async function health() {
+  const b = $('health');
+  try {
+    const h = await api('/health');
+    b.className = 'badge ' + h.status;
+    b.textContent = h.status + ' · db ' + h.db + ' · cache ' + h.cache;
+    $('footer').textContent = 'Ledgerly ' + h.version + ' · served by ' + h.host;
+  } catch (e) { b.className = 'badge DOWN'; b.textContent = 'API DOWN'; }
+}
+
+async function loadPortfolios() {
+  const ul = $('portfolios');
+  try {
+    const list = await api('/portfolios');
+    ul.innerHTML = '';
+    list.forEach(p => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span>' + p.name + '</span><small>' + p.code + ' · ' + p.currency + '</small>';
+      li.onclick = () => { [...ul.children].forEach(c => c.classList.remove('active')); li.classList.add('active'); loadPositions(p); };
+      ul.appendChild(li);
+    });
+  } catch (e) { ul.innerHTML = '<li class="err">Could not load portfolios (' + e.message + ')</li>'; }
+}
+
+async function loadPositions(p) {
+  $('posTitle').textContent = 'Positions – ' + p.name;
+  const tb = $('positions');
+  tb.innerHTML = '<tr><td colspan="5">Loading…</td></tr>';
+  try {
+    const rows = await api('/portfolios/' + p.id + '/positions');
+    tb.innerHTML = rows.map(r => '<tr><td>' + r.symbol + '</td><td>' + r.instrument + '</td><td class="num">' + fmt.format(r.quantity) +
+      '</td><td class="num">' + fmt.format(r.avg_cost) + '</td><td class="num">' + fmt.format(r.market_value) + '</td></tr>').join('');
+  } catch (e) { tb.innerHTML = '<tr><td colspan="5" class="err">' + e.message + '</td></tr>'; }
+}
+
+$('runReport').onclick = async () => {
+  const btn = $('runReport'), out = $('reportOut');
+  btn.disabled = true; out.textContent = 'Running monthly report…';
+  const t0 = performance.now();
+  try {
+    const r = await api('/reports/run?year=' + $('year').value + '&month=' + $('month').value, { method: 'POST' });
+    out.textContent = 'Report ' + r.period + ' completed: ' + r.portfolioCount + ' portfolios, ' + r.transactionCount +
+      ' transactions, server ' + r.durationMs + ' ms, round-trip ' + Math.round(performance.now() - t0) + ' ms.';
+  } catch (e) { out.innerHTML = '<span class="err">Report failed: ' + e.message + '</span>'; }
+  btn.disabled = false;
+};
+
+health(); setInterval(health, 10000);
+loadPortfolios();
+</script>
+</body>
+</html>

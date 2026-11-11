@@ -1,0 +1,71 @@
+# Ledgerly – "on-prem" deployment (Docker Desktop on the presenter's laptop).
+# This file is the single source of truth for the discovery block: services,
+# images, ports, volumes, env vars and limits are all read from here.
+name: ledgerly
+
+services:
+  web:
+    build: ./web
+    image: ledgerly/web:1.0
+    ports:
+      - "8081:80"                 # the only entry point: http://localhost:8081 (HTTP only; host 8080 is used by the draw.io MCP server)
+    environment:
+      API_UPSTREAM: http://api:8080
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    image: ledgerly/api:1.0
+    env_file: .env                # legacy: plaintext secrets from .env
+    environment:
+      REDIS_SSL: "false"
+    mem_limit: 1g                 # NOTE: image hard-codes JAVA_OPTS=-Xms1g -Xmx2g (heap > limit!)
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    restart: unless-stopped
+
+  db:
+    image: mysql:5.7              # legacy: MySQL 5.7 is end-of-life (Oct 2023)
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    command: ["--character-set-server=utf8", "--collation-server=utf8_general_ci"]
+    ports:
+      - "3307:3306"               # legacy: database published to the host network
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    restart: unless-stopped
+
+  cache:
+    image: redis:7-alpine         # legacy: no password, no TLS
+    restart: unless-stopped
+
+  batch:
+    build: ./batch
+    image: ledgerly/batch:1.0
+    env_file: .env
+    volumes:
+      - reports:/reports
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  reports:

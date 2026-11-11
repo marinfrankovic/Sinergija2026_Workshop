@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "hediet.vscode-drawio",
+    "ms-azuretools.vscode-bicep",
+    "ms-azuretools.azure-dev",
+    "GitHub.copilot-chat",
+    "vscjava.vscode-java-pack",
+    "ms-azuretools.vscode-docker"
+  ]
+}

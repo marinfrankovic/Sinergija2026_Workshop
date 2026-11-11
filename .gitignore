@@ -1,0 +1,6 @@
+.azure/
+out/
+api/target/
+reports/
+*.log
+docs/discovery-output.txt.bak
