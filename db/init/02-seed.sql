@@ -56,7 +56,7 @@ INSERT INTO digits VALUES (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
 INSERT INTO transactions (portfolio_id, instrument_id, type, quantity, price, booking_date)
 SELECT 1 + (seq.n % 12),
        1 + ((seq.n DIV 12) % 30),
-       IF(seq.n % 5 = 0, 'SELL', 'BUY'),
+       IF((seq.n DIV 360) % 5 = 0, 'SELL', 'BUY'),
        1 + (seq.n % 50),
        ROUND(5 + ((seq.n * 13) % 2500) / 10, 2),
        DATE_ADD('2024-01-01', INTERVAL (seq.n % 731) DAY)

@@ -17,14 +17,26 @@ All secrets in this repo are **fake**. `.env` is an intentional legacy anti-patt
 | web | nginx 1.25, host **8081** → 80, HTTP | Container App `ca-ledgerly-web-workshop`, external HTTPS ingress → 80 |
 | api | Spring Boot 2.7 / Java 11, :8080, `mem_limit 1g` | Container App `ca-ledgerly-api-workshop`, internal ingress → 8080, 1 vCPU / 2Gi, scale 1–5 |
 | db | MySQL **5.7** (EOL), host 3307 | Azure Database for MySQL Flexible Server **8.0.21** `mysql-ledgerly-workshop-<sfx>`, B2s, 32 GB |
-| cache | Redis 7, no auth | Azure Cache for Redis **Basic C0** `redis-ledgerly-workshop-<sfx>`, TLS 6380 (alt.: Azure Managed Redis) |
+| cache | Redis 7, no auth | Azure Managed Redis **Balanced B0**, non-HA, `redis-ledgerly-workshop-<sfx>`, TLS 10000, nonclustered |
 | batch | alpine + crond, every 5 min | Container Apps job `caj-ledgerly-batch-workshop`, `*/15 * * * *` |
-| secrets | `.env` plaintext | Key Vault `kv-ledgerly-<sfx>` (RBAC) + UAMI `id-ledgerly-workshop` |
+| secrets | `.env` plaintext | Private Key Vault `kv-ledgerly-<sfx>` (RBAC) + UAMI `id-ledgerly-workshop` |
+| network | Docker Compose network | Dedicated `vnet-ledgerly-workshop`, Container Apps subnet, vault private endpoint and private DNS |
 | images | local build | ACR `crledgerlyworkshop<sfx>` (Basic, admin disabled, AcrPull via UAMI) |
 | observability | none | Log Analytics `log-ledgerly-workshop` + App Insights `appi-ledgerly-workshop`, MySQL slow log |
 
 `<sfx>` = 5-char `uniqueString(subscription, env, location)` – see `azd env get-values`.
 Diagrams: `docs/diagrams/ledgerly-as-is.drawio`, `ledgerly-to-be.drawio`.
+
+New deployments use Azure Managed Redis because Azure rejects creation of the retired
+Azure Cache for Redis tier. B0 is non-HA for workshop cost control; `NoCluster` keeps
+the existing Spring client compatible. The endpoint and TLS port are passed from Bicep,
+and the access key remains in Key Vault. Local Redis is unchanged.
+
+The target subscription enforces private Key Vault access. Container Apps therefore uses
+the dedicated workshop VNet and resolves the vault through `privatelink.vaultcore.azure.net`.
+The web endpoint remains public HTTPS and the API remains internal. Vault data-plane
+operations from an unconnected laptop are unavailable; migration reads its password from
+the ignored local AZD environment. Private Endpoint and DNS add charges.
 
 ## Prerequisites
 
@@ -46,6 +58,11 @@ Azure subscription with Owner (or Contributor + User Access Administrator) on th
 
 First start seeds 200,000 transactions (1–2 min). Host port **8080 is reserved for the draw.io MCP server**,
 so Ledgerly web listens on **8081**; MySQL is published on 3307.
+
+Verify seed completion as well as health: expect 12 portfolios, 30 instruments, 360 positions and
+200,000 transactions. The transaction generator varies BUY/SELL across full 360-pair cycles so every
+portfolio/instrument pair has purchases and a non-null average cost. A green health badge alone
+does not prove initialization completed; check `docker compose logs db` if counts differ.
 
 ## draw.io MCP server
 
@@ -150,7 +167,7 @@ Nothing here was deployed or compiled in the authoring environment (no Azure, Do
 Run `azd provision --preview`, `az bicep build -f infra/main.bicep` and `docker compose build` once before rehearsal.
 
 1. **Bicep not compiled** – syntax reviewed by hand. API versions used: Microsoft.App 2024-03-01,
-   DBforMySQL 2023-12-30, Cache/redis 2024-03-01, KeyVault 2023-07-01, ContainerRegistry 2023-07-01,
+   DBforMySQL 2023-12-30, Cache/redisEnterprise 2026-09-01, KeyVault 2023-07-01, ContainerRegistry 2023-07-01,
    OperationalInsights 2023-09-01, Insights/components 2020-02-02, ManagedIdentity 2023-01-31,
    diagnosticSettings 2021-05-01-preview, roleAssignments 2022-04-01, resourceGroups 2024-03-01.
 2. **MySQL Entra admin needs Graph permissions** – Flexible Server requires the server's UAMI

@@ -24,7 +24,7 @@ resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: true
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
-    publicNetworkAccess: 'Enabled' // workshop: Container Apps (Consumption, no VNet) reads secrets over the public endpoint
+    publicNetworkAccess: 'Disabled' // inherited policy requires private access; apps use the workshop VNet
   }
 }
 
@@ -58,5 +58,6 @@ resource adminSecretsOfficer 'Microsoft.Authorization/roleAssignments@2022-04-01
 }
 
 output name string = kv.name
+output id string = kv.id
 output uri string = kv.properties.vaultUri
 output mysqlPasswordSecretUri string = mysqlSecret.properties.secretUri

@@ -16,7 +16,7 @@ Audience: system administrators · Windows laptop, Docker Desktop, PowerShell 7,
 | MySQL | `mysql-ledgerly-workshop-<sfx>` – 8.0.21, Burstable B2s, 32 GB, db `ledgerly`, admin `ledgerlyadmin` |
 | MySQL firewall | `AllowAllAzureServices` (0.0.0.0) + `AllowPresenterIp` |
 | MySQL params | `slow_query_log=ON`, `long_query_time=2`, `log_queries_not_using_indexes=ON`; diag → `MySqlSlowLogs` |
-| Redis | `redis-ledgerly-workshop-<sfx>` – Basic C0, TLS 6380 (alt. Azure Managed Redis) |
+| Redis | `redis-ledgerly-workshop-<sfx>` – Azure Managed Redis Balanced B0, non-HA, nonclustered, TLS 10000 |
 | Key Vault | `kv-ledgerly-<sfx>` – RBAC – secrets `mysql-admin-password`, `redis-password` |
 | ACR | `crledgerlyworkshop<sfx>` – Basic, admin disabled |
 | Identities | `id-ledgerly-workshop` (apps: AcrPull, KV Secrets User, MySQL Entra user) · `id-ledgerly-mysql-workshop` (MySQL server, Entra lookup) |
@@ -121,7 +121,7 @@ Re-arm: `./scripts/reset.ps1` (rehearsal locally: `fault-3 -Local`, `fix-3 -Loca
 - **Copilot CLI**: `copilot` in the terminal – "explain scripts/03-migrate-data.ps1".
 - **Azure MCP**: "why is my container app restarting?" (server `azure` in `.vscode/mcp.json`).
 - **Checkpoints**: `git checkout 03-migrated` etc. (`checkpoints.md`).
-- **Cost**: tags `costCenter`/`workload` → Cost Management *group by tag*; Pricing Calculator for B2s MySQL, C0 Redis, ACR Basic, Consumption Container Apps. Tear down after the session: `./scripts/cleanup.ps1`.
+- **Cost**: tags `costCenter`/`workload` → Cost Management *group by tag*; Pricing Calculator for B2s MySQL, Managed Redis B0 (non-HA), ACR Basic, Consumption Container Apps. Tear down after the session: `./scripts/cleanup.ps1`.
 
 ## Pre-session checklist
 

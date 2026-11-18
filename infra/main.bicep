@@ -69,6 +69,7 @@ var names = {
   webApp: 'ca-${workload}-web-${environmentName}'
   apiApp: 'ca-${workload}-api-${environmentName}'
   batchJob: 'caj-${workload}-batch-${environmentName}'
+  virtualNetwork: 'vnet-${workload}-${environmentName}'
 }
 
 var mysqlAdminLogin = 'ledgerlyadmin'
@@ -127,6 +128,18 @@ module keyvault 'modules/keyvault.bicep' = {
   }
 }
 
+module networking 'modules/networking.bicep' = {
+  name: 'networking'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    name: names.virtualNetwork
+    keyVaultId: keyvault.outputs.id
+    keyVaultName: keyvault.outputs.name
+  }
+}
+
 module mysql 'modules/mysql.bicep' = {
   name: 'mysql'
   scope: rg
@@ -167,6 +180,7 @@ module containerapps 'modules/containerapps.bicep' = {
     location: location
     tags: tags
     environmentName: names.containerEnv
+    infrastructureSubnetId: networking.outputs.infrastructureSubnetId
     webAppName: names.webApp
     apiAppName: names.apiApp
     batchJobName: names.batchJob

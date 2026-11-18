@@ -4,6 +4,7 @@
 param location string
 param tags object
 param environmentName string
+param infrastructureSubnetId string
 param webAppName string
 param apiAppName string
 param batchJobName string
@@ -62,6 +63,16 @@ resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
   location: location
   tags: tags
   properties: {
+    vnetConfiguration: {
+      infrastructureSubnetId: infrastructureSubnetId
+      internal: false
+    }
+    workloadProfiles: [
+      {
+        name: 'Consumption'
+        workloadProfileType: 'Consumption'
+      }
+    ]
     appLogsConfiguration: {
       destination: 'log-analytics' // -> ContainerAppConsoleLogs_CL / ContainerAppSystemLogs_CL
       logAnalyticsConfiguration: {

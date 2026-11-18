@@ -7,7 +7,7 @@
 | web (nginx) | **Rehost** (container lift & shift) | Container App `ca-ledgerly-web-workshop`, external ingress (HTTPS) | Stateless; only the upstream URL changes (`API_UPSTREAM`) |
 | api (Spring Boot) | **Rehost → Refactor (light)** | Container App `ca-ledgerly-api-workshop`, internal ingress :8080 | Same image first; block 4 adds passwordless DB auth (profile `azure`). Later: Java 17/21 + Boot 3 (Replatform/Refactor) |
 | db (MySQL 5.7) | **Replatform** | Azure Database for MySQL Flexible Server **8.0.21** `mysql-ledgerly-workshop-<sfx>` | 5.7 is EOL; managed backups, patching, slow-log, Entra auth |
-| cache (Redis) | **Replatform** | Azure Cache for Redis **Basic C0** `redis-ledgerly-workshop-<sfx>` (TLS :6380) | Managed; key in Key Vault. Alternative: **Azure Managed Redis** for new builds |
+| cache (Redis) | **Replatform** | Azure Managed Redis **Balanced B0**, non-HA, `redis-ledgerly-workshop-<sfx>` (TLS :10000) | Nonclustered for the existing client; key in Key Vault. Legacy Cache for Redis creation is blocked by retirement |
 | batch (cron) | **Replatform** | Container Apps **job** `caj-ledgerly-batch-workshop`, `*/15 * * * *` | Scheduler is the platform; runs once & exits (`RUN_ONCE=true`) |
 | `.env` secrets | **Retire** | Key Vault `kv-ledgerly-<sfx>` + managed identity `id-ledgerly-workshop` | No secrets in files; API ends up with **no DB password at all** |
 | reports volume | **Retain (for now)** | ephemeral job storage | Follow-up: write CSVs to Blob Storage / Azure Files |

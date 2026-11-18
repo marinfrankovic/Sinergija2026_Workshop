@@ -44,7 +44,7 @@ diagram silently starts from empty (classic "Copilot got it wrong" moment – `g
 2. `search-shapes` with `queries: ["container apps environment", "container apps", "mysql flexible", "cache redis", "key vaults", "container registries", "managed identities", "log analytics", "application insights", "resource groups"]`.
 3. `import-diagram` with `docs/diagrams/ledgerly-starter.drawio` (title + legend) – optional.
 4. **As-is page**: `create-groups` (laptop / Docker host) → `add-cells` (5 containers, 2 volumes, `.env` note; edges by `temp_id`); brand icons for Docker/nginx/MySQL/Redis/Java from **thesvg** as embedded image cells (see below).
-5. `create-page` "to-be" → `create-groups` (rg-ledgerly-workshop, cae-ledgerly-workshop) → `add-cells` in one batch (icons via `shape_name`, edges with labels: HTTPS, internal HTTP, TLS 3306/6380, secret refs, AcrPull, logs).
+5. `create-page` "to-be" → `create-groups` (rg-ledgerly-workshop, cae-ledgerly-workshop) → `add-cells` in one batch (icons via `shape_name`, edges with labels: HTTPS, internal HTTP, TLS 3306/10000, secret refs, AcrPull, logs).
 6. `get-diagram-stats` (sanity: pages, cell and edge counts) → `export-diagram`.
 7. Save the XML as `docs/diagrams/ledgerly-live.drawio` → opens in the **draw.io VS Code extension** (`hediet.vscode-drawio`) → tidy by hand → commit.
 
